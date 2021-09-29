@@ -1,0 +1,84 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Lambda Authorizer Application
+
+Parameters:
+  Stage:
+    Type: String
+    Default: test
+
+Globals:
+  Function:
+    Runtime: nodejs12.x
+    Timeout: 540
+    MemorySize: 256
+    Environment:
+      Variables:
+        STAGE: test
+
+Resources:
+  # HTTP API
+  ApplicationAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      Auth:
+        DefaultAuthorizer: APIAuthorizer
+        Authorizers:
+          APIAuthorizer:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt Authorizer.Arn
+            Identity:
+              Headers:
+                - Authorization
+                - X-Cognito-Issuer
+              ReauthorizeEvery: 300
+
+  # Middlewares
+
+  # CORS
+  CORS:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/functions/middlewares/cors.handler
+      Description: Return a 200 and appropriate headers for your OPTIONS requests.
+      Events:
+        CORS:
+          Type: Api
+          Properties:
+            Path: /{cors+}
+            Method: options
+            RestApiId: !Ref ApplicationAPI
+            Auth:
+              Authorizer: NONE
+  # Authorizer
+  Authorizer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/functions/middlewares/authorizer.handler
+      Description: Custom authorizer for controlling access to API
+
+  usersCreate:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/functions/users.create
+      Description: Create a user
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonDynamoDBFullAccess
+        - AmazonCognitoPowerUser
+      Events:
+        usersCreate:
+          Type: Api
+          Properties:
+            Path: /v1/users
+            Method: post
+            RestApiId: !Ref ApplicationAPI
+
+Outputs:
+  ApplicationAPI:
+    Description: "API Gateway endpoint URL for stage"
+    Value: !Sub "https://${ApplicationAPI}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
