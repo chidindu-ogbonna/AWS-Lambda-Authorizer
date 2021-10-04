@@ -69,8 +69,7 @@ Resources:
       Description: Create a user
       Policies:
         - AWSLambdaBasicExecutionRole
-        - AmazonDynamoDBFullAccess
-        - AmazonCognitoPowerUser
+        - AmazonDynamoDBFullAccess  
       Events:
         usersCreate:
           Type: Api
