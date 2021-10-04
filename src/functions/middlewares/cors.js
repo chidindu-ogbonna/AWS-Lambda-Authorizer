@@ -1,6 +1,5 @@
 /*global require exports  */
-const { StatusCodes } = require("http-status-codes");
-const { makeResponse } = require("../../utils/lambda");
+const { sendResponse } = require("../../utils/lambda");
 
 /**
  * CORS Handler - options - /
@@ -9,5 +8,5 @@ const { makeResponse } = require("../../utils/lambda");
  * @returns {Object} object - API Gateway Lambda Proxy Output Format
  */
 exports.handler = async () => {
-  return makeResponse({ data: null }, StatusCodes.OK);
+  return sendResponse({ data: null });
 };

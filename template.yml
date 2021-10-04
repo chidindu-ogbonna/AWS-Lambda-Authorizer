@@ -18,6 +18,8 @@ Globals:
     Environment:
       Variables:
         STAGE: test
+        USER_POOL: eu-west-1_xxxxxxxxx
+        REGION: eu-west-1
 
 Resources:
   # HTTP API
@@ -34,7 +36,6 @@ Resources:
             Identity:
               Headers:
                 - Authorization
-                - X-Cognito-Issuer
               ReauthorizeEvery: 300
 
   # Middlewares
